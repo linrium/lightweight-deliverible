@@ -1,0 +1,10 @@
+default_pulling_interval: 10
+token: "MXkEzOHOjiuSDdIssoeNh3nU39F52cw1I6J3s3mr"
+platform_host_url: http://odd-platform:8080
+chunk_size: 1000
+plugins:
+  - type: duckdb
+    name: duckdb_adapter
+    paths:
+      - /data/data.duckdb
+    host: localhost

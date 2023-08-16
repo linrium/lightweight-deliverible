@@ -1,0 +1,67 @@
+version: '3.9'
+services:
+  metabase:
+    build: ./metaduck/
+    container_name: metabase
+    hostname: metabase
+    volumes:
+    - ./plugins:/plugins
+    - ./data:/data
+    ports:
+      - "3000:3000"
+    environment:
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_PLUGINS_DIR: /plugins
+    healthcheck:
+      test: curl --fail -I http://localhost:3000/api/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  database:
+    image: postgres:13.2-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DATABASE=${POSTGRES_DATABASE}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+  odd-platform:
+    image: ghcr.io/opendatadiscovery/odd-platform:latest
+    restart: always
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/${POSTGRES_DATABASE}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - AUTH_TYPE=LOGIN_FORM
+      - AUTH_LOGIN-FORM-CREDENTIALS=${USERNAME:-admin}:${PASSWORD:-admin}
+    depends_on:
+      - database
+    ports:
+      - "8080:8080"
+  odd-collector:
+    image: linrium/odd-collector:latest
+    restart: always
+    volumes:
+      - ./config/collector_config.yaml:/app/collector_config.yaml
+      - ./data:/data
+    environment:
+      - LOGLEVEL=${LOGLEVEL}
+    depends_on:
+      - odd-platform
+  datascience-notebook:
+    image: jupyter/datascience-notebook:latest
+    volumes:
+      - ${LOCAL_WORKING_DIR}:/home/linrium/work
+      - ${LOCAL_DATASETS}:/home/linrium/work/datasets
+      - ${LOCAL_MODULES}:/home/linrium/work/modules
+      - ${LOCAL_SSL_CERTS}:/etc/ssl/notebook
+    ports:
+      - "8888:8888"
+    container_name: jupyter_notebook
+    command: "start-notebook.sh \
+          --NotebookApp.password=${ACCESS_TOKEN} \
+          --NotebookApp.certfile=/etc/ssl/notebook/jupyter.pem"

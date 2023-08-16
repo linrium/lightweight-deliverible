@@ -1,0 +1,7 @@
+jupyter.pem
+jupyter
+node_modules
+postgres-data
+plugins/*
+data
+.idea
