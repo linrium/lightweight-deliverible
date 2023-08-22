@@ -27,6 +27,9 @@ openssl req -x509 -nodes -newkey rsa:2048 -keyout jupyter.pem -out jupyter/jupyt
 - Username: admin
 - Password: admin
 
+## ODD Collector
+- Repo: https://github.com/linrium/odd-collector
+
 ## Jupyter Notebook
 - URL: https://localhost:8888/
 - Password: 123456789!
